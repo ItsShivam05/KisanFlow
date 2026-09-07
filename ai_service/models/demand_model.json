@@ -1,0 +1,40 @@
+{
+  "model_name": "KisanFlow XGBoost Baseline",
+  "model_version": "v1.0-xgboost",
+  "supported_commodities": [
+    "Onion",
+    "Potato",
+    "Tomato"
+  ],
+  "supported_regions": [
+    "Gaya",
+    "Hajipur",
+    "Muzaffarpur",
+    "Patna",
+    "Varanasi"
+  ],
+  "features": [
+    "commodity_code",
+    "region_code",
+    "day_of_week_num",
+    "day_of_month",
+    "month",
+    "season_code",
+    "is_weekend",
+    "price_lag_1",
+    "price_rolling_mean_7",
+    "demand_lag_1",
+    "demand_lag_7",
+    "demand_lag_14",
+    "demand_rolling_mean_7",
+    "demand_rolling_mean_14",
+    "demand_rolling_std_7"
+  ],
+  "trained_at": "2026-09-06T09:04:00.960852",
+  "metrics": {
+    "mae_kg": 359.43,
+    "rmse_kg": 477.91,
+    "mape_percent": 4.74,
+    "test_sample_count": 2194
+  }
+}
