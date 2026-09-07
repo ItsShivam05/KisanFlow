@@ -1,0 +1,16 @@
+{
+  "name": "kisanflow",
+  "version": "1.0.0",
+  "description": "AI-powered farm-to-market supply network",
+  "scripts": {
+    "dev:backend": "npm --prefix backend run dev",
+    "dev:frontend": "npm --prefix frontend run dev",
+    "dev": "concurrently -n \"BACKEND,FRONTEND\" -c \"blue,green\" \"npm --prefix backend run dev\" \"npm --prefix frontend run dev\"",
+    "start": "concurrently -n \"BACKEND,FRONTEND\" -c \"blue,green\" \"npm --prefix backend start\" \"npm --prefix frontend start\"",
+    "build:frontend": "npm --prefix frontend run build",
+    "seed": "npm --prefix backend run seed"
+  },
+  "devDependencies": {
+    "concurrently": "^9.2.4"
+  }
+}

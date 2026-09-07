@@ -1,0 +1,74 @@
+-- =======================================================
+-- KisanFlow Neon PostgreSQL Database Seed Data
+-- =======================================================
+
+-- 1. PROFILES
+INSERT INTO profiles (id, auth_user_id, full_name, phone, role) VALUES
+('11111111-1111-1111-1111-111111111101', 'auth_farmer_01', 'Ramesh Patel', '+91 98260 12345', 'farmer'),
+('11111111-1111-1111-1111-111111111102', 'auth_farmer_02', 'Gurpreet Singh', '+91 98140 23456', 'farmer'),
+('11111111-1111-1111-1111-111111111103', 'auth_farmer_03', 'Baldev Patil', '+91 98220 34567', 'farmer'),
+('11111111-1111-1111-1111-111111111104', 'auth_fpo_01', 'Malwa Kisan Producer Co Ltd', '+91 73120 45678', 'fpo'),
+('11111111-1111-1111-1111-111111111105', 'auth_fpo_02', 'Sahyadri Agro Farmers Co', '+91 25320 56789', 'fpo'),
+('11111111-1111-1111-1111-111111111106', 'auth_buyer_01', 'Reliance Fresh Sourcing', '+91 22610 67890', 'buyer'),
+('11111111-1111-1111-1111-111111111107', 'auth_buyer_02', 'ITC Agri-Business Division', '+91 40230 78901', 'buyer'),
+('11111111-1111-1111-1111-111111111108', 'auth_buyer_03', 'BigBasket B2B Procurement', '+91 80450 89012', 'buyer')
+ON CONFLICT (id) DO NOTHING;
+
+-- 2. FARMERS
+INSERT INTO farmers (id, profile_id, farm_name, farm_size_acres, address, location, verification_status) VALUES
+('22222222-2222-2222-2222-222222222201', '11111111-1111-1111-1111-111111111101', 'Patel Organic Farms', 14.5, 'Village Sanwer, Dist. Indore, Madhya Pradesh', ST_SetSRID(ST_MakePoint(75.82, 22.97), 4326)::geography, 'verified'),
+('22222222-2222-2222-2222-222222222202', '11111111-1111-1111-1111-111111111102', 'Kisan Heritage Farm', 22.0, 'Village Samrala, Dist. Ludhiana, Punjab', ST_SetSRID(ST_MakePoint(76.19, 30.83), 4326)::geography, 'verified'),
+('22222222-2222-2222-2222-222222222203', '11111111-1111-1111-1111-111111111103', 'Ratnagiri Green Orchards', 18.0, 'Pawas Road, Dist. Ratnagiri, Maharashtra', ST_SetSRID(ST_MakePoint(73.31, 16.99), 4326)::geography, 'verified')
+ON CONFLICT (id) DO NOTHING;
+
+-- 3. FPOS
+INSERT INTO fpos (id, profile_id, fpo_name, registration_number, address, location, verification_status) VALUES
+('33333333-3333-3333-3333-333333333301', '11111111-1111-1111-1111-111111111104', 'Malwa Krishi Farmer Producer Co', 'FPO-MP-IND-2021-8842', 'Warehouse Complex, Sanwer Road, Indore, MP', ST_SetSRID(ST_MakePoint(75.85, 22.75), 4326)::geography, 'verified'),
+('33333333-3333-3333-3333-333333333302', '11111111-1111-1111-1111-111111111105', 'Sahyadri Horti-Produce Co-op', 'FPO-MH-NSK-2019-4112', 'Pimpalgaon APMC Yard, Nashik, Maharashtra', ST_SetSRID(ST_MakePoint(73.98, 20.17), 4326)::geography, 'verified')
+ON CONFLICT (id) DO NOTHING;
+
+-- 4. BUYERS
+INSERT INTO buyers (id, profile_id, business_name, buyer_type, address, location) VALUES
+('44444444-4444-4444-4444-444444444401', '11111111-1111-1111-1111-111111111106', 'Reliance Retail Agri Logistics', 'retailer', 'Ghansoli Central Distribution Hub, Navi Mumbai, Maharashtra', ST_SetSRID(ST_MakePoint(73.00, 19.12), 4326)::geography),
+('44444444-4444-4444-4444-444444444402', '11111111-1111-1111-1111-111111111107', 'ITC Agri-Business Division', 'institution', 'ITC Park, Cyberabad, Hyderabad, Telangana', ST_SetSRID(ST_MakePoint(78.38, 17.44), 4326)::geography),
+('44444444-4444-4444-4444-444444444403', '11111111-1111-1111-1111-111111111108', 'BigBasket Wholesale Hub', 'bulk_buyer', 'Whitefield Cold-Chain Center, Bengaluru, Karnataka', ST_SetSRID(ST_MakePoint(77.74, 12.96), 4326)::geography)
+ON CONFLICT (id) DO NOTHING;
+
+-- 5. PRODUCTS
+INSERT INTO products (id, name, category, description, unit) VALUES
+('55555555-5555-5555-5555-555555555501', 'Premium Sharbati Wheat', 'Grains', 'Golden heavy-kernel Sharbati wheat grown in the black soil of Sehore & Malwa, naturally high in gluten and protein.', 'quintal'),
+('55555555-5555-5555-5555-555555555502', 'Organic 1121 Basmati Rice', 'Grains', 'Extra-long grain aromatic basmati rice aged for 24 months, harvested from chemical-free fertile Punjab plains.', 'quintal'),
+('55555555-5555-5555-5555-555555555503', 'GI-Tagged Alphonso Mangoes', 'Fruits', 'Naturally tree-ripened export-grade Hapus mangoes with rich saffron pulp from Konkan coastal orchards.', 'crate'),
+('55555555-5555-5555-5555-555555555504', 'Nashik Red Onions (Grade A)', 'Vegetables', 'Properly cured, thin-neck pungent red onions with low moisture content and 90-day storage longevity.', 'kg'),
+('55555555-5555-5555-5555-555555555505', 'Yellow Mustard Seeds (Pili Sarson)', 'Oilseeds', 'Clean, stone-free cold-press ready high-oil mustard seeds with 42% natural oil yield.', 'kg'),
+('55555555-5555-5555-5555-555555555506', 'Guntur Sannam Red Chilli', 'Spices', 'Sun-dried vibrant red chillies with high capsaicin content and authentic pungency for spice processing.', 'kg'),
+('55555555-5555-5555-5555-555555555507', 'Desi Chana (Bengal Gram)', 'Pulses', 'Machine cleaned uniform chickpeas rich in dietary fibre and protein, ideal for besan millers.', 'quintal'),
+('55555555-5555-5555-5555-555555555508', 'Shimla Royal Delicious Apples', 'Fruits', 'Crisp, hand-sorted high-altitude apples packed in protective trays with uniform 75-80mm sizing.', 'crate')
+ON CONFLICT (id) DO NOTHING;
+
+-- 6. INVENTORY
+INSERT INTO inventory (id, product_id, farmer_id, fpo_id, quantity, available_quantity, price_per_unit, quality, harvest_date, available_from, available_until) VALUES
+('66666666-6666-6666-6666-666666666601', '55555555-5555-5555-5555-555555555501', '22222222-2222-2222-2222-222222222201', NULL, 350.00, 300.00, 3850.00, 'Grade A', '2026-03-25', '2026-04-01', '2026-10-30'),
+('66666666-6666-6666-6666-666666666602', '55555555-5555-5555-5555-555555555502', '22222222-2222-2222-2222-222222222202', NULL, 500.00, 450.00, 6200.00, 'Organic Certified', '2026-02-15', '2026-03-01', '2026-12-31'),
+('66666666-6666-6666-6666-666666666603', '55555555-5555-5555-5555-555555555503', '22222222-2222-2222-2222-222222222203', NULL, 1200.00, 1100.00, 950.00, 'GI Grade-1', '2026-04-10', '2026-04-15', '2026-06-30'),
+('66666666-6666-6666-6666-666666666604', '55555555-5555-5555-5555-555555555504', NULL, '33333333-3333-3333-3333-333333333302', 8500.00, 7500.00, 26.50, 'Grade A (55mm+)', '2026-03-20', '2026-03-25', '2026-08-30'),
+('66666666-6666-6666-6666-666666666605', '55555555-5555-5555-5555-555555555505', NULL, '33333333-3333-3333-3333-333333333301', 4500.00, 4500.00, 68.00, 'Premium 42% Oil', '2026-02-28', '2026-03-10', '2026-11-30'),
+('66666666-6666-6666-6666-666666666606', '55555555-5555-5555-5555-555555555506', NULL, '33333333-3333-3333-3333-333333333301', 2000.00, 2000.00, 195.00, 'Export Dry Grade', '2026-01-20', '2026-02-01', '2026-12-31'),
+('66666666-6666-6666-6666-666666666607', '55555555-5555-5555-5555-555555555507', '22222222-2222-2222-2222-222222222201', NULL, 280.00, 280.00, 5800.00, 'Bold Grade A', '2026-03-15', '2026-03-25', '2026-12-31'),
+('66666666-6666-6666-6666-666666666608', '55555555-5555-5555-5555-555555555508', NULL, '33333333-3333-3333-3333-333333333302', 800.00, 800.00, 1450.00, 'Fancy Royal', '2026-08-10', '2026-08-20', '2026-11-30')
+ON CONFLICT (id) DO NOTHING;
+
+-- 7. ORDERS
+INSERT INTO orders (id, buyer_id, order_status, delivery_address, delivery_location, delivery_preference, total_amount, payment_status) VALUES
+('77777777-7777-7777-7777-777777777701', '44444444-4444-4444-4444-444444444401', 'confirmed', 'Reliance DC, Plot C-12, MIDC Turbhe, Navi Mumbai', ST_SetSRID(ST_MakePoint(73.02, 19.08), 4326)::geography, 'Reefer Scheduled 48hr', 119000.00, 'paid'),
+('77777777-7777-7777-7777-777777777702', '44444444-4444-4444-4444-444444444402', 'out_for_delivery', 'ITC Processing Plant, Sector 5, Pithampur Industrial Area, MP', ST_SetSRID(ST_MakePoint(75.68, 22.61), 4326)::geography, 'Dedicated Flatbed Truck', 192500.00, 'paid'),
+('77777777-7777-7777-7777-777777777703', '44444444-4444-4444-4444-444444444403', 'delivered', 'BigBasket Fulfillment Depot, Hoodi Circle, Bengaluru', ST_SetSRID(ST_MakePoint(77.71, 12.99), 4326)::geography, 'Standard Transit', 310000.00, 'paid')
+ON CONFLICT (id) DO NOTHING;
+
+-- 8. ORDER ITEMS
+INSERT INTO order_items (id, order_id, inventory_id, product_id, quantity, price_per_unit, subtotal) VALUES
+('88888888-8888-8888-8888-888888888801', '77777777-7777-7777-7777-777777777701', '66666666-6666-6666-6666-666666666603', '55555555-5555-5555-5555-555555555503', 100.00, 950.00, 95000.00),
+('88888888-8888-8888-8888-888888888802', '77777777-7777-7777-7777-777777777701', '66666666-6666-6666-6666-666666666604', '55555555-5555-5555-5555-555555555504', 905.66, 26.50, 24000.00),
+('88888888-8888-8888-8888-888888888803', '77777777-7777-7777-7777-777777777702', '66666666-6666-6666-6666-666666666601', '55555555-5555-5555-5555-555555555501', 50.00, 3850.00, 192500.00),
+('88888888-8888-8888-8888-888888888804', '77777777-7777-7777-7777-777777777703', '66666666-6666-6666-6666-666666666602', '55555555-5555-5555-5555-555555555502', 50.00, 6200.00, 310000.00)
+ON CONFLICT (id) DO NOTHING;
