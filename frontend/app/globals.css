@@ -1,0 +1,14 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  * { @apply border-stone-200; }
+  body { @apply bg-cream text-stone-800 antialiased; }
+}
+
+@layer components {
+  .eyebrow { @apply text-xs font-bold uppercase tracking-[0.18em] text-leaf-600; }
+  .section-title { @apply text-3xl font-semibold tracking-tight text-stone-900 sm:text-4xl; }
+  .field { @apply mt-1 w-full rounded-xl border-stone-200 bg-white px-4 py-3 text-sm text-stone-900 outline-none transition placeholder:text-stone-400 focus:border-leaf-500 focus:ring-2 focus:ring-leaf-100; }
+}
