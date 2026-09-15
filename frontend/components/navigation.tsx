@@ -19,6 +19,9 @@ export function Navigation() {
               {link}
             </a>
           ))}
+          <a className="text-sm font-semibold text-leaf-700 hover:text-leaf-900 transition" href="/crop-planning">
+            What to Grow?
+          </a>
           <a className="text-sm font-semibold text-leaf-700 hover:text-leaf-900 transition" href="/price-intelligence">
             Price Intelligence
           </a>
@@ -41,6 +44,9 @@ export function Navigation() {
                 {link}
               </a>
             ))}
+            <a className="font-semibold text-leaf-700" href="/crop-planning">
+              What to Grow?
+            </a>
             <a className="font-semibold text-leaf-700" href="/price-intelligence">
               Price Intelligence
             </a>
