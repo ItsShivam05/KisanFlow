@@ -78,15 +78,18 @@ export default function DashboardPage() {
 
   const roleActions: Record<string, { label: string; href: string }[]> = {
     FARMER: [
+      { label: "Price & Profit Advisor", href: "/price-intelligence" },
       { label: "List harvest produce", href: "/inventory" },
       { label: "View sales & orders", href: "/orders" },
       { label: "Network impact metrics", href: "/impact" },
     ],
     FPO: [
+      { label: "Price Intelligence & Mandi Advisor", href: "/price-intelligence" },
       { label: "Add member produce", href: "/inventory" },
       { label: "Create bulk procurement", href: "/procurement/new" },
       { label: "Orders & dispatch", href: "/orders" },
     ],
+
     BUYER: [
       { label: "Browse produce supply", href: "/inventory" },
       { label: "Create procurement request", href: "/procurement/new" },
