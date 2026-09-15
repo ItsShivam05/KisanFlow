@@ -124,11 +124,9 @@ export default function DashboardPage() {
         <p className="text-stone-600">{error}</p>
       </main>
     );
-  }
-
-  const content  = roleCopy[user!.role]    || roleCopy.CONSUMER;
-  const actions  = roleActions[user!.role] || roleActions.CONSUMER;
-  const firstName = user!.name.split(" ")[0];
+  const content = roleCopy[user.role] || roleCopy.CONSUMER;
+  const actions = roleActions[user.role] || roleActions.CONSUMER;
+  const firstName = user.name.split(" ")[0];
 
   return (
     <main className="min-h-screen bg-sand">

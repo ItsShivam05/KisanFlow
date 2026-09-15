@@ -154,3 +154,75 @@ def test_pipeline_run_endpoint():
     assert "matching" in data
     assert "routing" in data
     assert len(data["executive_summary"]) > 0
+
+def test_jharkhand_price_markets_endpoint():
+    resp = client.get("/price-markets")
+    assert resp.status_code == 200
+    data = resp.json()
+    assert isinstance(data, list)
+    market_names = [m["name"] for m in data]
+    assert "Ranchi" in market_names
+    assert "Jamshedpur" in market_names
+
+def test_jharkhand_price_commodities_endpoint():
+    resp = client.get("/price-commodities")
+    assert resp.status_code == 200
+    data = resp.json()
+    assert "commodities" in data
+    assert "Tomato" in data["commodities"]
+    assert "Potato" in data["commodities"]
+
+def test_jharkhand_price_predict_endpoint():
+    payload = {
+        "commodity": "Tomato",
+        "region": "Ranchi",
+        "forecast_days": 7,
+        "quantity_kg": 1000.0,
+        "farmer_location": "Ranchi"
+    }
+    resp = client.post("/price-predict", json=payload)
+    assert resp.status_code == 200
+    data = resp.json()
+    assert data["commodity"] == "Tomato"
+    assert data["region"] == "Ranchi"
+    assert data["current_price"] > 0
+    assert len(data["predictions"]) == 7
+    assert data["recommendation"] in ["SELL_NOW", "WAIT_1_DAYS", "WAIT_2_DAYS", "WAIT_3_DAYS", "WAIT_4_DAYS", "WAIT_5_DAYS", "WAIT_6_DAYS", "WAIT_7_DAYS"]
+    assert len(data["explainability_factors"]) > 0
+
+def test_jharkhand_farmer_profit_recommendation_endpoint():
+    payload = {
+        "commodity": "Tomato",
+        "quantity_kg": 2000.0,
+        "farmer_location": "Hazaribagh"
+    }
+    resp = client.post("/farmer-profit-recommendation", json=payload)
+    assert resp.status_code == 200
+    data = resp.json()
+    assert data["commodity"] == "Tomato"
+    assert len(data["recommendations"]) >= 2
+    rec = [r for r in data["recommendations"] if r["recommended"]]
+    assert len(rec) == 1
+    assert data["max_net_realization"] > 0
+
+def test_jharkhand_market_allocation_endpoint():
+    payload = {
+        "commodity": "Tomato",
+        "quantity_kg": 4000.0,
+        "farmer_location": "Ranchi",
+        "max_single_market_share": 0.50
+    }
+    resp = client.post("/market-allocation", json=payload)
+    assert resp.status_code == 200
+    data = resp.json()
+    assert len(data["allocations"]) >= 2
+    assert data["total_projected_net_profit"] > 0
+
+def test_jharkhand_model_metrics_endpoint():
+    resp = client.get("/price-model-metrics")
+    assert resp.status_code == 200
+    data = resp.json()
+    assert data["model_name"] == "XGBoost Regressor (Primary)"
+    assert "Tomato" in data["overall_metrics"]
+    assert "Tomato" in data["baseline_comparison"]
+

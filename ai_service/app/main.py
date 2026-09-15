@@ -46,9 +46,18 @@ async def lifespan(app: FastAPI):
         model.save(str(model_path))
         logger.info("Baseline demand forecasting model successfully trained and persisted.")
         
+    # Warm up Jharkhand Price Prediction & Profit Optimization Registry
+    try:
+        from ai_service.app.api.price_prediction import get_registry_and_data
+        get_registry_and_data()
+        logger.info("Jharkhand regional price prediction models loaded and ready.")
+    except Exception as e:
+        logger.warning(f"Jharkhand price models warmup warning: {e}")
+        
     logger.info("KisanFlow AI Service initialization complete and ready to serve requests.")
     yield
     logger.info("Shutting down KisanFlow AI & Optimization Service...")
+
 
 def create_app() -> FastAPI:
     app = FastAPI(
