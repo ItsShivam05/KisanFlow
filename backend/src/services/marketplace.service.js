@@ -318,6 +318,44 @@ async function matchProcurement(user, id) {
   return matched;
 }
 
+async function optimizeAllocation(user, id) {
+  const request = await getProcurement(user, id);
+  requireRole(user, ["BUYER", "FPO", "ADMIN"]);
+  const inventory = await listInventory(user, { product: request.product_name });
+
+  const payload = {
+    product_name: request.product_name,
+    demand_quantity_kg: Number(request.requested_quantity_kg),
+    max_price_per_kg: request.max_price_per_kg ? Number(request.max_price_per_kg) : null,
+    quality_requirement: request.quality_requirement || "B",
+    required_by: request.required_by,
+    destination: {
+      latitude: Number(request.destination_latitude),
+      longitude: Number(request.destination_longitude),
+      name: request.destination_name
+    },
+    candidates: inventory.map((item) => ({
+      supplier_id: item.id,
+      name: item.supplier_name || "KisanFlow supplier",
+      supplier_type: item.fpo_id ? "FPO" : "Farmer",
+      available_quantity_kg: Number(item.available_quantity_kg),
+      price_per_kg: Number(item.asking_price_per_kg),
+      quality_grade: item.quality_grade,
+      latitude: Number(item.latitude),
+      longitude: Number(item.longitude),
+      reliability_score: 0.85,
+      freshness_days: Math.max(
+        0,
+        Math.floor((Date.now() - new Date(item.harvest_date).getTime()) / 86400000)
+      ),
+      shelf_life_days: Number(item.shelf_life_days) || 7
+    }))
+  };
+
+  const aiService = require("./ai.service");
+  return aiService.optimizeAllocation(payload);
+}
+
 async function confirmProcurement(user, id) {
   const request = await getProcurement(user, id);
   requireRole(user, ["BUYER"]);
@@ -392,27 +430,36 @@ async function confirmProcurement(user, id) {
 }
 
 async function listOrders(user) {
-  const column =
-    user.role === "BUYER"
-      ? "o.buyer_user_id"
-      : user.role === "FARMER"
-        ? "o.supplier_user_id"
-        : null;
-  if (!column) throw httpError("Orders are not available for this role", 403);
-  const result = await pool.query(
-    `SELECT o.*, d.status AS delivery_status, d.expected_delivery FROM orders o LEFT JOIN deliveries d ON d.order_id = o.id WHERE ${column} = $1 ORDER BY o.created_at DESC`,
-    [user.id],
-  );
+  let query = `
+    SELECT DISTINCT o.*, d.status AS delivery_status, d.expected_delivery
+    FROM orders o
+    LEFT JOIN deliveries d ON d.order_id = o.id
+  `;
+  let params = [];
+
+  if (user.role === "BUYER" || user.role === "CONSUMER") {
+    query += " WHERE o.buyer_user_id = $1";
+    params.push(user.id);
+  } else if (user.role === "FARMER") {
+    query += ` WHERE o.supplier_user_id = $1 OR o.id IN (SELECT oi.order_id FROM order_items oi JOIN inventory i ON i.id = oi.inventory_id WHERE i.farmer_user_id = $1)`;
+    params.push(user.id);
+  } else if (user.role === "FPO") {
+    query += ` WHERE o.fpo_id = $1 OR o.supplier_user_id = $1 OR o.id IN (SELECT oi.order_id FROM order_items oi JOIN inventory i ON i.id = oi.inventory_id WHERE i.fpo_id = $1)`;
+    params.push(user.id);
+  } else if (user.role === "ADMIN") {
+    // No WHERE clause needed for admin
+  } else {
+    throw httpError("Orders are not available for this role", 403);
+  }
+
+  query += " ORDER BY o.created_at DESC";
+
+  const result = await pool.query(query, params);
   return result.rows;
 }
 
 async function updateDelivery(user, orderId, status, exceptionReason) {
-  requireRole(user, ["FARMER", "BUYER", "ADMIN"]);
-  const result = await pool.query(
-    "SELECT o.*, d.id AS delivery_id FROM orders o JOIN deliveries d ON d.order_id = o.id WHERE o.id = $1 AND (o.buyer_user_id = $2 OR o.supplier_user_id = $2 OR $3 = 'ADMIN')",
-    [orderId, user.id, user.role],
-  );
-  if (!result.rows[0]) throw httpError("Order not found", 404);
+  requireRole(user, ["FARMER", "BUYER", "CONSUMER", "FPO", "ADMIN"]);
   if (
     ![
       "PICKUP_PENDING",
@@ -423,27 +470,78 @@ async function updateDelivery(user, orderId, status, exceptionReason) {
     ].includes(status)
   )
     throw httpError("Invalid delivery status");
-  await pool.query(
-    "UPDATE deliveries SET status = $1, exception_reason = $2, actual_delivery = CASE WHEN $1 = 'DELIVERED' THEN NOW() ELSE actual_delivery END, updated_at = NOW() WHERE id = $3",
-    [status, exceptionReason || null, result.rows[0].delivery_id],
-  );
-  const orderStatus =
-    status === "DELIVERED"
-      ? "DELIVERED"
-      : status === "IN_TRANSIT"
-        ? "IN_TRANSIT"
-        : status === "PICKED_UP"
-          ? "PICKUP_SCHEDULED"
-          : result.rows[0].status;
-  await pool.query(
-    "UPDATE orders SET status = $1, updated_at = NOW() WHERE id = $2",
-    [orderStatus, orderId],
-  );
-  return {
-    order_id: orderId,
-    delivery_status: status,
-    order_status: orderStatus,
-  };
+
+  const client = await pool.connect();
+  try {
+    await client.query("BEGIN");
+
+    const result = await client.query(
+      `SELECT o.*, d.id AS delivery_id
+       FROM orders o
+       JOIN deliveries d ON d.order_id = o.id
+       WHERE o.id = $1
+         AND (
+           o.buyer_user_id = $2
+           OR o.supplier_user_id = $2
+           OR o.fpo_id = $2
+           OR $3::text = 'ADMIN'
+           OR o.id IN (
+             SELECT oi.order_id
+             FROM order_items oi
+             JOIN inventory i ON i.id = oi.inventory_id
+             WHERE i.farmer_user_id = $2 OR i.fpo_id = $2
+           )
+         )`,
+      [orderId, user.id, user.role],
+    );
+    if (!result.rows[0]) throw httpError("Order not found", 404);
+
+    await client.query(
+      "UPDATE deliveries SET status = $1::text, exception_reason = $2, actual_delivery = CASE WHEN $1::text = 'DELIVERED' THEN NOW() ELSE actual_delivery END, updated_at = NOW() WHERE id = $3",
+      [status, exceptionReason || null, result.rows[0].delivery_id],
+    );
+
+    const orderStatus =
+      status === "DELIVERED"
+        ? "DELIVERED"
+        : status === "IN_TRANSIT"
+          ? "IN_TRANSIT"
+          : status === "PICKED_UP"
+            ? "PICKUP_SCHEDULED"
+            : result.rows[0].status;
+
+    await client.query(
+      "UPDATE orders SET status = $1::text, updated_at = NOW() WHERE id = $2",
+      [orderStatus, orderId],
+    );
+
+    // If status becomes EXCEPTION (e.g. cancelled/delivery failed), release reserved inventory back
+    if (status === "EXCEPTION") {
+      const items = await client.query(
+        "SELECT inventory_id, quantity_kg FROM order_items WHERE order_id = $1",
+        [orderId],
+      );
+      for (const item of items.rows) {
+        await client.query(
+          "UPDATE inventory SET reserved_quantity_kg = GREATEST(0, reserved_quantity_kg - $1), available_quantity_kg = available_quantity_kg + $1, updated_at = NOW() WHERE id = $2",
+          [item.quantity_kg, item.inventory_id],
+        );
+      }
+    }
+
+    await client.query("COMMIT");
+
+    return {
+      order_id: orderId,
+      delivery_status: status,
+      order_status: orderStatus,
+    };
+  } catch (error) {
+    await client.query("ROLLBACK");
+    throw error;
+  } finally {
+    client.release();
+  }
 }
 
 async function optimizeProcurement(user, id) {
@@ -566,6 +664,7 @@ module.exports = {
   listProcurement,
   getProcurement,
   matchProcurement,
+  optimizeAllocation,
   confirmProcurement,
   listOrders,
   updateDelivery,
