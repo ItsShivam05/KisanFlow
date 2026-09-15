@@ -75,49 +75,97 @@ export default function DashboardPage() {
       </main>
     );
   const content = roleCopy[user.role] || roleCopy.CONSUMER;
-  const actionLinks =
-    user.role === "FARMER"
-      ? ["/inventory", "/inventory", "/orders"]
-      : user.role === "BUYER"
-        ? ["/inventory", "/procurement/new", "/orders"]
-        : ["/orders", "/orders", "/orders"];
+
+  const roleActions: Record<string, { label: string; href: string }[]> = {
+    FARMER: [
+      { label: "List harvest produce", href: "/inventory" },
+      { label: "View sales & orders", href: "/orders" },
+      { label: "Network impact metrics", href: "/impact" },
+    ],
+    FPO: [
+      { label: "Add member produce", href: "/inventory" },
+      { label: "Create bulk procurement", href: "/procurement/new" },
+      { label: "Orders & dispatch", href: "/orders" },
+    ],
+    BUYER: [
+      { label: "Browse produce supply", href: "/inventory" },
+      { label: "Create procurement request", href: "/procurement/new" },
+      { label: "Track deliveries & orders", href: "/orders" },
+    ],
+    CONSUMER: [
+      { label: "Explore fresh produce", href: "/inventory" },
+      { label: "View active orders", href: "/orders" },
+      { label: "Network impact & metrics", href: "/impact" },
+    ],
+    ADMIN: [
+      { label: "Network impact metrics", href: "/impact" },
+      { label: "Procurement requests", href: "/procurement/new" },
+      { label: "All orders & logistics", href: "/orders" },
+    ],
+  };
+
+  const actions = roleActions[user.role] || roleActions.CONSUMER;
+
+  const roleBadgeColor: Record<string, string> = {
+    FARMER: "bg-emerald-100 text-emerald-800 border-emerald-300",
+    FPO: "bg-amber-100 text-amber-800 border-amber-300",
+    BUYER: "bg-blue-100 text-blue-800 border-blue-300",
+    CONSUMER: "bg-purple-100 text-purple-800 border-purple-300",
+    ADMIN: "bg-rose-100 text-rose-800 border-rose-300",
+  };
+
   return (
     <main className="min-h-screen bg-cream">
       <header className="border-b bg-white">
         <div className="mx-auto flex max-w-6xl items-center justify-between px-5 py-4">
-          <a className="font-bold text-leaf-900" href="/">
+          <a className="font-bold text-leaf-900 text-xl flex items-center gap-2" href="/">
             🌾 KisanFlow
           </a>
-          <button
-            onClick={() => {
-              localStorage.removeItem("kisanflow_token");
-              router.push("/login");
-            }}
-            className="text-sm font-semibold text-leaf-700"
-          >
-            Log out
-          </button>
+          <div className="flex items-center gap-4">
+            <span
+              className={`rounded-full border px-3 py-1 text-xs font-bold uppercase tracking-wider ${
+                roleBadgeColor[user.role] || "bg-stone-100 text-stone-700"
+              }`}
+            >
+              {user.role}
+            </span>
+            <button
+              onClick={() => {
+                localStorage.removeItem("kisanflow_token");
+                router.push("/login");
+              }}
+              className="text-sm font-semibold text-leaf-700 hover:text-leaf-900"
+            >
+              Log out
+            </button>
+          </div>
         </div>
       </header>
-      <section className="mx-auto max-w-6xl px-5 py-14">
-        <p className="eyebrow">{user.role} workspace</p>
+      <section className="mx-auto max-w-6xl px-5 py-12">
+        <div className="flex items-center gap-3">
+          <span className="eyebrow">{user.role} Workspace</span>
+        </div>
         <h1 className="mt-3 text-4xl font-semibold tracking-tight text-leaf-900">
           Hello, {user.name.split(" ")[0]}.
         </h1>
-        <p className="mt-4 max-w-xl text-lg text-stone-600">
+        <p className="mt-3 max-w-xl text-lg text-stone-600">
           {content.description}
         </p>
-        <div className="mt-10 rounded-3xl bg-leaf-900 p-8 text-white">
-          <p className="text-leaf-100">Your next step</p>
-          <h2 className="mt-2 text-2xl font-semibold">{content.title}</h2>
-          <div className="mt-7 grid gap-3 sm:grid-cols-3">
-            {content.actions.map((action, index) => (
+
+        <div className="mt-10 rounded-3xl bg-leaf-900 p-8 text-white shadow-lg">
+          <p className="text-leaf-100 text-sm font-medium">Your Workspace Quick Actions</p>
+          <h2 className="mt-1 text-2xl font-semibold">{content.title}</h2>
+          <div className="mt-7 grid gap-4 sm:grid-cols-3">
+            {actions.map((act) => (
               <a
-                href={actionLinks[index]}
-                key={action}
-                className="rounded-xl bg-white/10 p-4 text-left font-semibold transition hover:bg-white/20"
+                href={act.href}
+                key={act.label}
+                className="group rounded-2xl bg-white/10 p-5 text-left font-semibold transition hover:bg-white/20 hover:scale-[1.02] flex flex-col justify-between min-h-[100px]"
               >
-                {action} <span aria-hidden>→</span>
+                <span>{act.label}</span>
+                <span className="text-right text-leaf-200 group-hover:translate-x-1 transition-transform font-bold">
+                  →
+                </span>
               </a>
             ))}
           </div>
