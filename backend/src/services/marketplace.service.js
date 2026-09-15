@@ -120,6 +120,15 @@ async function createInventory(user, body) {
   const fpoId = user.role === "FPO" ? body.fpo_id : null;
   if (user.role === "FPO" && !fpoId)
     throw httpError("fpo_id is required for FPO inventory");
+
+  if (user.role === "FARMER") {
+    await pool.query(
+      `INSERT INTO farmers (user_id, farm_name, village, district, state)
+       VALUES ($1, $2, 'Patna Village', 'Patna', 'Bihar')
+       ON CONFLICT (user_id) DO NOTHING`,
+      [user.id, `${user.name || "Farmer"}'s Farm`]
+    );
+  }
   const result = await pool.query(
     `INSERT INTO inventory (id, farmer_user_id, fpo_id, product_id, total_quantity_kg, available_quantity_kg, asking_price_per_kg, quality_grade, harvest_date, available_from, latitude, longitude, region) VALUES ($1, $2, $3, $4, $5, $5, $6, $7, $8, COALESCE($9::date, CURRENT_DATE), $10, $11, $12) RETURNING *`,
     [
@@ -166,6 +175,15 @@ async function createProcurement(user, body) {
     throw httpError(
       "product_id, required_by, destination_name, and destination_region are required",
     );
+
+  if (user.role === "BUYER") {
+    await pool.query(
+      `INSERT INTO buyers (user_id, organization_name, buyer_type, destination_name, region)
+       VALUES ($1, $2, 'RETAILER', $3, $4)
+       ON CONFLICT (user_id) DO NOTHING`,
+      [user.id, `${user.name || "Buyer"} Org`, body.destination_name, body.destination_region]
+    );
+  }
   const result = await pool.query(
     `INSERT INTO procurement_requests (id, buyer_user_id, product_id, requested_quantity_kg, max_price_per_kg, quality_requirement, required_by, destination_name, destination_region, destination_latitude, destination_longitude) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11) RETURNING *`,
     [

@@ -22,6 +22,7 @@ const products = [
 
 export default function InventoryPage() {
   const router = useRouter();
+  const [userRole, setUserRole] = useState<string | null>(null);
   const [items, setItems] = useState<InventoryItem[]>([]);
   const [error, setError] = useState("");
   const [message, setMessage] = useState("");
@@ -43,8 +44,14 @@ export default function InventoryPage() {
     }
   }
   useEffect(() => {
-    if (!localStorage.getItem("kisanflow_token")) router.replace("/login");
-    else void load();
+    if (!localStorage.getItem("kisanflow_token")) {
+      router.replace("/login");
+      return;
+    }
+    void apiRequest<{ user: { role: string } }>("/auth/me")
+      .then((data) => setUserRole(data.user.role))
+      .catch(() => {});
+    void load();
   }, [router]);
   async function submit(event: FormEvent) {
     event.preventDefault();
@@ -64,91 +71,113 @@ export default function InventoryPage() {
       );
     }
   }
+  const canList = userRole === "FARMER" || userRole === "FPO";
+
   return (
     <main className="min-h-screen bg-cream px-5 py-8">
       <div className="mx-auto max-w-5xl">
         <a className="font-bold text-leaf-900" href="/dashboard">
           ← Dashboard
         </a>
-        <div className="mt-8 grid gap-8 lg:grid-cols-[.8fr_1.2fr]">
-          <section>
-            <p className="eyebrow">Farmer workspace</p>
-            <h1 className="mt-2 text-4xl font-semibold text-leaf-900">
-              My produce
-            </h1>
-            <p className="mt-3 text-stone-600">
-              List available harvest so buyers and the matching engine can find
-              it.
-            </p>
-            <form
-              onSubmit={submit}
-              className="mt-6 space-y-4 rounded-2xl bg-white p-5 shadow-soft"
-            >
-              <select
-                className="field"
-                value={form.product_id}
-                onChange={(e) =>
-                  setForm({ ...form, product_id: e.target.value })
-                }
+        <div className={`mt-8 grid gap-8 ${canList ? "lg:grid-cols-[.8fr_1.2fr]" : "grid-cols-1"}`}>
+          {canList ? (
+            <section>
+              <p className="eyebrow">{userRole} workspace</p>
+              <h1 className="mt-2 text-4xl font-semibold text-leaf-900">
+                My produce
+              </h1>
+              <p className="mt-3 text-stone-600">
+                List available harvest so buyers and the matching engine can find
+                it.
+              </p>
+              <form
+                onSubmit={submit}
+                className="mt-6 space-y-4 rounded-2xl bg-white p-5 shadow-soft"
               >
-                {products.map((product) => (
-                  <option key={product.id} value={product.id}>
-                    {product.name}
-                  </option>
-                ))}
-              </select>
-              <input
-                className="field"
-                required
-                type="number"
-                min="1"
-                placeholder="Quantity (kg)"
-                value={form.total_quantity_kg}
-                onChange={(e) =>
-                  setForm({ ...form, total_quantity_kg: e.target.value })
-                }
-              />
-              <input
-                className="field"
-                required
-                type="number"
-                min="1"
-                step="0.01"
-                placeholder="Asking price per kg (INR)"
-                value={form.asking_price_per_kg}
-                onChange={(e) =>
-                  setForm({ ...form, asking_price_per_kg: e.target.value })
-                }
-              />
-              <div className="grid grid-cols-2 gap-3">
                 <select
                   className="field"
-                  value={form.quality_grade}
+                  value={form.product_id}
                   onChange={(e) =>
-                    setForm({ ...form, quality_grade: e.target.value })
+                    setForm({ ...form, product_id: e.target.value })
                   }
                 >
-                  <option>A</option>
-                  <option>B</option>
-                  <option>C</option>
+                  {products.map((product) => (
+                    <option key={product.id} value={product.id}>
+                      {product.name}
+                    </option>
+                  ))}
                 </select>
                 <input
                   className="field"
                   required
-                  type="date"
-                  value={form.harvest_date}
+                  type="number"
+                  min="1"
+                  placeholder="Quantity (kg)"
+                  value={form.total_quantity_kg}
                   onChange={(e) =>
-                    setForm({ ...form, harvest_date: e.target.value })
+                    setForm({ ...form, total_quantity_kg: e.target.value })
                   }
                 />
+                <input
+                  className="field"
+                  required
+                  type="number"
+                  min="1"
+                  step="0.01"
+                  placeholder="Asking price per kg (INR)"
+                  value={form.asking_price_per_kg}
+                  onChange={(e) =>
+                    setForm({ ...form, asking_price_per_kg: e.target.value })
+                  }
+                />
+                <div className="grid grid-cols-2 gap-3">
+                  <select
+                    className="field"
+                    value={form.quality_grade}
+                    onChange={(e) =>
+                      setForm({ ...form, quality_grade: e.target.value })
+                    }
+                  >
+                    <option>A</option>
+                    <option>B</option>
+                    <option>C</option>
+                  </select>
+                  <input
+                    className="field"
+                    required
+                    type="date"
+                    value={form.harvest_date}
+                    onChange={(e) =>
+                      setForm({ ...form, harvest_date: e.target.value })
+                    }
+                  />
+                </div>
+                <button className="w-full rounded-xl bg-leaf-700 px-4 py-3 font-semibold text-white">
+                  List produce
+                </button>
+                {message && <p className="text-sm text-leaf-700">{message}</p>}
+                {error && <p className="text-sm text-red-700">{error}</p>}
+              </form>
+            </section>
+          ) : (
+            <div className="rounded-2xl bg-blue-50 border border-blue-200 p-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+              <div>
+                <p className="eyebrow text-blue-800">{userRole || "BUYER"} VIEW</p>
+                <h2 className="mt-1 text-2xl font-semibold text-stone-900">
+                  Marketplace Produce Supply
+                </h2>
+                <p className="mt-1 text-stone-600 text-sm">
+                  As a {userRole || "Buyer"}, you can view available farmer produce below. To request bulk produce, create a procurement request.
+                </p>
               </div>
-              <button className="w-full rounded-xl bg-leaf-700 px-4 py-3 font-semibold text-white">
-                List produce
-              </button>
-              {message && <p className="text-sm text-leaf-700">{message}</p>}
-              {error && <p className="text-sm text-red-700">{error}</p>}
-            </form>
-          </section>
+              <a
+                href="/procurement/new"
+                className="whitespace-nowrap rounded-xl bg-leaf-700 px-4 py-3 text-center text-sm font-semibold text-white hover:bg-leaf-900"
+              >
+                + New Procurement Request
+              </a>
+            </div>
+          )}
           <section>
             <h2 className="text-xl font-semibold text-stone-900">
               Available lots
