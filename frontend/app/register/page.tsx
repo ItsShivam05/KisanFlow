@@ -3,7 +3,7 @@
 import { FormEvent, useState } from "react";
 import { useRouter } from "next/navigation";
 import { AuthShell } from "@/components/auth-shell";
-import { apiUrl } from "@/lib/api";
+import { apiRequest } from "@/lib/api";
 
 const roles = [
   { value: "FARMER",   label: "Farmer — I grow and sell produce" },
@@ -22,14 +22,11 @@ export default function RegisterPage() {
     event.preventDefault();
     setError(""); setLoading(true);
     try {
-      const response = await fetch(`${apiUrl}/auth/register`, {
+      const data = await apiRequest<{ token: string }>("/auth/register", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
         body: JSON.stringify(form),
       });
-      const result = await response.json();
-      if (!response.ok) throw new Error(result.message || "Unable to create your account");
-      localStorage.setItem("kisanflow_token", result.data.token);
+      localStorage.setItem("kisanflow_token", data.token);
       router.push("/dashboard");
     } catch (caught) {
       setError(caught instanceof Error ? caught.message : "Unable to create your account");

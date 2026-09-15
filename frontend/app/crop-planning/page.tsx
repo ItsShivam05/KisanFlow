@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { aiApiRequest } from "@/lib/api";
+import { AppShell } from "@/components/app-shell";
 
 type CropEvaluation = {
   rank: number;
@@ -183,41 +184,8 @@ export default function CropPlanningPage() {
     new Intl.NumberFormat("en-IN").format(Math.round(val));
 
   return (
-    <main className="min-h-screen bg-stone-50/50 pb-20 font-sans text-stone-800">
-      {/* Top Navigation */}
-      <header className="sticky top-0 z-30 border-b border-stone-200/80 bg-white/90 backdrop-blur-md">
-        <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-3 sm:px-6 lg:px-8">
-          <div className="flex items-center gap-3">
-            <Link
-              href="/dashboard"
-              className="flex items-center gap-2 text-xl font-bold tracking-tight text-leaf-900 transition hover:opacity-80"
-            >
-              <span className="grid h-9 w-9 place-items-center rounded-xl bg-leaf-700 text-lg text-white shadow-sm">
-                🌱
-              </span>
-              <span>KisanFlow</span>
-            </Link>
-            <span className="hidden rounded-full bg-emerald-100 px-3 py-0.5 text-xs font-semibold text-emerald-800 sm:inline-block">
-              Jharkhand Pilot
-            </span>
-          </div>
-
-          <div className="flex items-center gap-4 text-sm font-medium">
-            <Link
-              href="/price-intelligence"
-              className="text-stone-600 transition hover:text-leaf-800"
-            >
-              Price Intelligence
-            </Link>
-            <Link
-              href="/dashboard"
-              className="rounded-lg bg-stone-100 px-3 py-1.5 text-stone-700 transition hover:bg-stone-200"
-            >
-              Back to Dashboard
-            </Link>
-          </div>
-        </div>
-      </header>
+    <AppShell backHref="/dashboard" backLabel="Dashboard">
+      <div className="pb-12 text-stone-800">
 
       {/* Hero Header */}
       <section className="border-b border-stone-200 bg-white py-10">
@@ -822,6 +790,7 @@ export default function CropPlanningPage() {
           </div>
         </div>
       </div>
-    </main>
+      </div>
+    </AppShell>
   );
 }

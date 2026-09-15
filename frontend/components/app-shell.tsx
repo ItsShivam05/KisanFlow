@@ -11,6 +11,8 @@ type AppShellProps = {
 
 const navLinks = [
   { label: "Dashboard", href: "/dashboard" },
+  { label: "Crop Planning", href: "/crop-planning" },
+  { label: "Price Intelligence", href: "/price-intelligence" },
   { label: "Inventory", href: "/inventory" },
   { label: "Procurement", href: "/procurement/new" },
   { label: "Orders", href: "/orders" },

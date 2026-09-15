@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { aiApiRequest } from "@/lib/api";
+import { AppShell } from "@/components/app-shell";
 
 type ForecastItem = {
   horizon_day: number;
@@ -164,36 +165,8 @@ export default function PriceIntelligencePage() {
   }, [commodity, region, forecastDays]);
 
   return (
-    <div className="min-h-screen bg-cream text-stone-800 font-sans pb-16">
-      {/* Top Banner Navigation */}
-      <header className="border-b border-stone-200/80 bg-white/80 backdrop-blur sticky top-0 z-30 px-6 py-4">
-        <div className="max-w-7xl mx-auto flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <Link href="/" className="flex items-center gap-2 text-xl font-bold tracking-tight text-leaf-900">
-              <span className="grid h-9 w-9 place-items-center rounded-xl bg-leaf-700 text-lg text-white">🌾</span>
-              KisanFlow
-            </Link>
-            <span className="hidden sm:inline-block text-xs font-semibold px-2.5 py-0.5 rounded-full bg-leaf-100 text-leaf-700 border border-leaf-500/20">
-              Jharkhand Mandi Pilot
-            </span>
-          </div>
-
-          <div className="flex items-center gap-4 text-sm font-medium">
-            <Link href="/dashboard" className="text-stone-600 hover:text-leaf-700 transition">
-              Workspace
-            </Link>
-            <Link href="/inventory" className="text-stone-600 hover:text-leaf-700 transition">
-              Harvest Produce
-            </Link>
-            <span className="text-leaf-700 font-semibold border-b-2 border-leaf-700 pb-0.5">
-              Price & Profit Intelligence
-            </span>
-          </div>
-        </div>
-      </header>
-
-      {/* Hero Header */}
-      <main className="max-w-7xl mx-auto px-5 sm:px-6 lg:px-8 pt-8 space-y-10">
+    <AppShell backHref="/dashboard" backLabel="Dashboard">
+      <div className="space-y-10 pb-12">
         <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 border-b border-stone-200 pb-6">
           <div>
             <span className="text-xs uppercase tracking-wider font-bold text-leaf-700">
@@ -596,7 +569,7 @@ export default function PriceIntelligencePage() {
             or farmer profit.
           </p>
         </div>
-      </main>
-    </div>
+      </div>
+    </AppShell>
   );
 }

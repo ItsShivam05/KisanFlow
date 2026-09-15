@@ -3,7 +3,7 @@
 import { FormEvent, useState } from "react";
 import { useRouter } from "next/navigation";
 import { AuthShell } from "@/components/auth-shell";
-import { apiUrl } from "@/lib/api";
+import { apiRequest } from "@/lib/api";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -16,14 +16,11 @@ export default function LoginPage() {
     event.preventDefault();
     setError(""); setLoading(true);
     try {
-      const response = await fetch(`${apiUrl}/auth/login`, {
+      const data = await apiRequest<{ token: string }>("/auth/login", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email, password }),
       });
-      const result = await response.json();
-      if (!response.ok) throw new Error(result.message || "Unable to log in");
-      localStorage.setItem("kisanflow_token", result.data.token);
+      localStorage.setItem("kisanflow_token", data.token);
       router.push("/dashboard");
     } catch (caught) {
       setError(caught instanceof Error ? caught.message : "Unable to log in");

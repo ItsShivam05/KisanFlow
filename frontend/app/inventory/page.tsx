@@ -127,8 +127,13 @@ export default function InventoryPage() {
               <p className="mt-1 text-sm text-stone-500">Add a new lot to the marketplace.</p>
 
               {/* Market signal (no AI branding) */}
-              <div className="mt-4 rounded-lg border border-leaf-200 bg-leaf-50 p-4 text-sm space-y-1.5">
-                <p className="font-semibold text-leaf-900 text-xs uppercase tracking-wider">Market signal — Tomato, Patna</p>
+              <div className="mt-4 rounded-lg border border-leaf-200 bg-leaf-50 p-4 text-sm space-y-2">
+                <div className="flex items-center justify-between">
+                  <p className="font-semibold text-leaf-900 text-xs uppercase tracking-wider">Market signal — Tomato, Patna</p>
+                  <a href="/price-intelligence" className="text-xs font-semibold text-leaf-700 hover:underline">
+                    Price Advisor →
+                  </a>
+                </div>
                 <div className="flex items-baseline justify-between">
                   <span className="text-stone-600">Suggested price</span>
                   <span className="font-semibold text-stone-900">₹34/kg</span>
@@ -136,6 +141,12 @@ export default function InventoryPage() {
                 <div className="flex items-baseline justify-between">
                   <span className="text-stone-600">7-day demand</span>
                   <span className="font-semibold text-stone-900">34,398 kg</span>
+                </div>
+                <div className="border-t border-leaf-200/60 pt-2 flex items-center justify-between text-xs">
+                  <span className="text-stone-500">Unsure what to cultivate next?</span>
+                  <a href="/crop-planning" className="font-semibold text-leaf-700 hover:underline">
+                    What to grow →
+                  </a>
                 </div>
               </div>
 

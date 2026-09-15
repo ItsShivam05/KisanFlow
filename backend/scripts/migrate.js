@@ -213,5 +213,5 @@ async function migrate() {
 }
 
 migrate()
-  .catch((error) => { console.error("Migration failed:", error.message); process.exitCode = 1; })
+  .catch((error) => { console.error("Migration failed:", error.stack || error); process.exitCode = 1; })
   .finally(() => pool.end());

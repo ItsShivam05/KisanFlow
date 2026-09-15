@@ -89,7 +89,7 @@ async function listInventory(user, filters = {}) {
   }
   if (filters.product) {
     values.push(filters.product);
-    conditions.push(`LOWER(p.name) = LOWER($${values.length})`);
+    conditions.push(`(LOWER(p.name) = LOWER($${values.length}) OR i.product_id = $${values.length})`);
   }
   if (filters.region) {
     values.push(filters.region);
@@ -100,7 +100,7 @@ async function listInventory(user, filters = {}) {
     conditions.push(`i.quality_grade <= $${values.length}`);
   }
   const result = await pool.query(
-    `SELECT i.*, p.name AS product_name, p.shelf_life_days, COALESCE(f.farm_name, fp.name) AS supplier_name FROM inventory i JOIN products p ON p.id = i.product_id LEFT JOIN farmers f ON f.user_id = i.farmer_user_id LEFT JOIN fpos fp ON fp.id = i.fpo_id WHERE ${conditions.join(" AND ")} ORDER BY i.created_at DESC`,
+    `SELECT i.*, COALESCE(p.name, i.product_id) AS product_name, COALESCE(p.shelf_life_days, 7) AS shelf_life_days, COALESCE(f.farm_name, fp.name, 'KisanFlow Farmer') AS supplier_name FROM inventory i LEFT JOIN products p ON (p.id = i.product_id OR LOWER(p.name) = LOWER(i.product_id)) LEFT JOIN farmers f ON f.user_id = i.farmer_user_id LEFT JOIN fpos fp ON fp.id = i.fpo_id WHERE ${conditions.join(" AND ")} ORDER BY i.created_at DESC`,
     values,
   );
   return result.rows;
@@ -130,12 +130,13 @@ async function createInventory(user, body) {
     );
   }
   const result = await pool.query(
-    `INSERT INTO inventory (id, farmer_user_id, fpo_id, product_id, total_quantity_kg, available_quantity_kg, asking_price_per_kg, quality_grade, harvest_date, available_from, latitude, longitude, region) VALUES ($1, $2, $3, $4, $5, $5, $6, $7, $8, COALESCE($9::date, CURRENT_DATE), $10, $11, $12) RETURNING *`,
+    `INSERT INTO inventory (id, farmer_user_id, fpo_id, product_id, total_quantity_kg, available_quantity_kg, asking_price_per_kg, quality_grade, harvest_date, available_from, latitude, longitude, region) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, COALESCE($10::date, CURRENT_DATE), $11, $12, $13) RETURNING *`,
     [
       crypto.randomUUID(),
       farmerId,
       fpoId,
       body.product_id,
+      quantity,
       quantity,
       price,
       body.quality_grade || "A",
@@ -196,8 +197,8 @@ async function createProcurement(user, body) {
       body.required_by,
       body.destination_name,
       body.destination_region,
-      body.destination_latitude,
-      body.destination_longitude,
+      body.destination_latitude || 25.5941,
+      body.destination_longitude || 85.1376,
     ],
   );
   return result.rows[0];
@@ -206,7 +207,7 @@ async function createProcurement(user, body) {
 async function listProcurement(user) {
   requireRole(user, ["BUYER"]);
   const result = await pool.query(
-    "SELECT r.*, p.name AS product_name FROM procurement_requests r JOIN products p ON p.id = r.product_id WHERE r.buyer_user_id = $1 ORDER BY r.created_at DESC",
+    "SELECT r.*, COALESCE(p.name, r.product_id) AS product_name FROM procurement_requests r LEFT JOIN products p ON (p.id = r.product_id OR LOWER(p.name) = LOWER(r.product_id)) WHERE r.buyer_user_id = $1 ORDER BY r.created_at DESC",
     [user.id],
   );
   return result.rows;
@@ -214,7 +215,7 @@ async function listProcurement(user) {
 
 async function getProcurement(user, id) {
   const result = await pool.query(
-    "SELECT r.*, p.name AS product_name FROM procurement_requests r JOIN products p ON p.id = r.product_id WHERE r.id = $1",
+    "SELECT r.*, COALESCE(p.name, r.product_id) AS product_name FROM procurement_requests r LEFT JOIN products p ON (p.id = r.product_id OR LOWER(p.name) = LOWER(r.product_id)) WHERE r.id = $1",
     [id],
   );
   if (!result.rows[0]) throw httpError("Procurement request not found", 404);

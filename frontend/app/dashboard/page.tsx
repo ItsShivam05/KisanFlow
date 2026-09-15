@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { apiUrl } from "@/lib/api";
+import { apiRequest } from "@/lib/api";
 
 type User = { name: string; role: string };
 
@@ -33,13 +33,15 @@ const roleCopy: Record<string, { greeting: string; description: string }> = {
 /* ── Role-specific quick actions ── */
 const roleActions: Record<string, { label: string; description: string; href: string }[]> = {
   FARMER: [
+    { label: "Crop planning", description: "AI recommendations on what to grow & expected demand", href: "/crop-planning" },
+    { label: "Price intelligence", description: "Mandi price forecasting & net profit advisor", href: "/price-intelligence" },
     { label: "My produce", description: "List and manage your harvest inventory", href: "/inventory" },
     { label: "Orders", description: "View and update your sales orders", href: "/orders" },
-    { label: "Network impact", description: "See how KisanFlow is working for you", href: "/impact" },
   ],
   FPO: [
+    { label: "Crop planning", description: "Regional crop demand & acreage advice", href: "/crop-planning" },
+    { label: "Price intelligence", description: "Mandi price forecasts & multi-market allocation", href: "/price-intelligence" },
     { label: "Member produce", description: "Add and manage collective inventory", href: "/inventory" },
-    { label: "Procurement", description: "Create bulk procurement requests", href: "/procurement/new" },
     { label: "Orders & dispatch", description: "Track and manage all orders", href: "/orders" },
   ],
   BUYER: [
@@ -92,15 +94,13 @@ export default function DashboardPage() {
   useEffect(() => {
     const token = localStorage.getItem("kisanflow_token");
     if (!token) { router.replace("/login"); return; }
-    fetch(`${apiUrl}/auth/me`, { headers: { Authorization: `Bearer ${token}` } })
-      .then(async (res) => {
-        if (!res.ok) throw new Error("Your session has ended. Please log in again.");
-        const result = await res.json();
-        setUser(result.data.user);
+    void apiRequest<{ user: User }>("/auth/me")
+      .then((data) => {
+        setUser(data.user);
       })
       .catch((caught) => {
         localStorage.removeItem("kisanflow_token");
-        setError(caught.message);
+        setError(caught instanceof Error ? caught.message : "Your session has ended. Please log in again.");
         setTimeout(() => router.replace("/login"), 1400);
       });
   }, [router]);
@@ -124,6 +124,10 @@ export default function DashboardPage() {
         <p className="text-stone-600">{error}</p>
       </main>
     );
+  }
+
+  if (!user) return null;
+
   const content = roleCopy[user.role] || roleCopy.CONSUMER;
   const actions = roleActions[user.role] || roleActions.CONSUMER;
   const firstName = user.name.split(" ")[0];
@@ -141,6 +145,8 @@ export default function DashboardPage() {
 
           {/* Nav links */}
           <nav className="hidden items-center gap-5 md:flex">
+            <a href="/crop-planning" className="text-sm font-medium text-stone-500 hover:text-stone-900 transition">Crop Planning</a>
+            <a href="/price-intelligence" className="text-sm font-medium text-stone-500 hover:text-stone-900 transition">Price Intelligence</a>
             <a href="/inventory" className="text-sm font-medium text-stone-500 hover:text-stone-900 transition">Inventory</a>
             <a href="/procurement/new" className="text-sm font-medium text-stone-500 hover:text-stone-900 transition">Procurement</a>
             <a href="/orders" className="text-sm font-medium text-stone-500 hover:text-stone-900 transition">Orders</a>
