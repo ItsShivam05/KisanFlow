@@ -36,6 +36,9 @@ module.exports = {
   matchProcurement: run((request) =>
     service.matchProcurement(request.user, request.params.id),
   ),
+  optimizeAllocation: run((request) =>
+    service.optimizeAllocation(request.user, request.params.id),
+  ),
   confirmProcurement: run((request) =>
     service.confirmProcurement(request.user, request.params.id),
   ),

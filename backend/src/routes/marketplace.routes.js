@@ -18,6 +18,10 @@ router.post("/procurement-requests", controller.createProcurement);
 router.get("/procurement-requests", controller.listProcurement);
 router.get("/procurement-requests/:id", controller.getProcurement);
 router.post("/procurement-requests/:id/match", controller.matchProcurement);
+router.post(
+  "/procurement-requests/:id/optimize-allocation",
+  controller.optimizeAllocation,
+);
 router.post("/procurement-requests/:id/confirm", controller.confirmProcurement);
 router.post(
   "/procurement-requests/:id/optimize-route",

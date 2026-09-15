@@ -7,15 +7,14 @@ import { apiUrl } from "@/lib/api";
 
 export default function LoginPage() {
   const router = useRouter();
-  const [email, setEmail] = useState("");
+  const [email,    setEmail]    = useState("");
   const [password, setPassword] = useState("");
-  const [error, setError] = useState("");
-  const [loading, setLoading] = useState(false);
+  const [error,    setError]    = useState("");
+  const [loading,  setLoading]  = useState(false);
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    setError("");
-    setLoading(true);
+    setError(""); setLoading(true);
     try {
       const response = await fetch(`${apiUrl}/auth/login`, {
         method: "POST",
@@ -36,55 +35,64 @@ export default function LoginPage() {
   return (
     <AuthShell>
       <p className="eyebrow">Welcome back</p>
-      <h2 className="mt-3 text-3xl font-semibold tracking-tight text-stone-900">
+      <h2 className="mt-3 text-2xl font-semibold tracking-tight text-stone-900">
         Log in to KisanFlow
       </h2>
-      <p className="mt-3 text-stone-600">
+      <p className="mt-2 text-sm text-stone-500">
         Enter your details to access your workspace.
       </p>
-      <form className="mt-8 space-y-5" onSubmit={handleSubmit}>
-        <label className="block text-sm font-semibold text-stone-700">
-          Email
+
+      <form className="mt-7 space-y-4" onSubmit={handleSubmit}>
+        <div>
+          <label className="text-xs font-semibold text-stone-600" htmlFor="login-email">
+            Email address
+          </label>
           <input
+            id="login-email"
             className="field"
             type="email"
             autoComplete="email"
             required
             value={email}
-            onChange={(event) => setEmail(event.target.value)}
+            onChange={(e) => setEmail(e.target.value)}
             placeholder="you@example.com"
           />
-        </label>
-        <label className="block text-sm font-semibold text-stone-700">
-          Password
+        </div>
+
+        <div>
+          <label className="text-xs font-semibold text-stone-600" htmlFor="login-password">
+            Password
+          </label>
           <input
+            id="login-password"
             className="field"
             type="password"
             autoComplete="current-password"
             required
             value={password}
-            onChange={(event) => setPassword(event.target.value)}
+            onChange={(e) => setPassword(e.target.value)}
             placeholder="Your password"
           />
-        </label>
+        </div>
+
         {error && (
-          <p className="rounded-xl bg-red-50 p-3 text-sm text-red-700">
+          <p className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
             {error}
           </p>
         )}
+
         <button
+          type="submit"
           disabled={loading}
-          className="w-full rounded-full bg-leaf-700 px-5 py-3 font-semibold text-white transition hover:bg-leaf-900 disabled:opacity-60"
+          className="btn-primary w-full"
         >
           {loading ? "Logging in…" : "Log in"}
         </button>
       </form>
-      <p className="mt-7 text-center text-sm text-stone-600">
+
+      <p className="mt-6 text-center text-sm text-stone-500">
         New to KisanFlow?{" "}
-        <a
-          className="font-semibold text-leaf-700 hover:text-leaf-900"
-          href="/register"
-        >
+        <a className="font-semibold text-leaf-700 hover:text-leaf-900" href="/register">
           Create an account
         </a>
       </p>
