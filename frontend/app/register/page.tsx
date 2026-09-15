@@ -5,22 +5,22 @@ import { useRouter } from "next/navigation";
 import { AuthShell } from "@/components/auth-shell";
 import { apiUrl } from "@/lib/api";
 
-const roles = ["FARMER", "FPO", "BUYER", "CONSUMER"];
+const roles = [
+  { value: "FARMER",   label: "Farmer — I grow and sell produce" },
+  { value: "FPO",      label: "FPO — I represent a farmer collective" },
+  { value: "BUYER",    label: "Buyer — I procure produce for my business" },
+  { value: "CONSUMER", label: "Consumer — I buy produce for personal use" },
+];
 
 export default function RegisterPage() {
   const router = useRouter();
-  const [form, setForm] = useState({
-    name: "",
-    email: "",
-    password: "",
-    role: "FARMER",
-  });
-  const [error, setError] = useState("");
+  const [form, setForm] = useState({ name: "", email: "", password: "", role: "FARMER" });
+  const [error,   setError]   = useState("");
   const [loading, setLoading] = useState(false);
+
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    setError("");
-    setLoading(true);
+    setError(""); setLoading(true);
     try {
       const response = await fetch(`${apiUrl}/auth/register`, {
         method: "POST",
@@ -28,99 +28,96 @@ export default function RegisterPage() {
         body: JSON.stringify(form),
       });
       const result = await response.json();
-      if (!response.ok)
-        throw new Error(result.message || "Unable to create your account");
+      if (!response.ok) throw new Error(result.message || "Unable to create your account");
       localStorage.setItem("kisanflow_token", result.data.token);
       router.push("/dashboard");
     } catch (caught) {
-      setError(
-        caught instanceof Error
-          ? caught.message
-          : "Unable to create your account",
-      );
+      setError(caught instanceof Error ? caught.message : "Unable to create your account");
     } finally {
       setLoading(false);
     }
   }
+
   return (
     <AuthShell>
       <p className="eyebrow">Join the network</p>
-      <h2 className="mt-3 text-3xl font-semibold tracking-tight text-stone-900">
+      <h2 className="mt-3 text-2xl font-semibold tracking-tight text-stone-900">
         Create your KisanFlow account
       </h2>
-      <p className="mt-3 text-stone-600">
+      <p className="mt-2 text-sm text-stone-500">
         Choose your role to get a workspace designed for you.
       </p>
-      <form className="mt-8 space-y-5" onSubmit={handleSubmit}>
-        <label className="block text-sm font-semibold text-stone-700">
-          Full name
+
+      <form className="mt-7 space-y-4" onSubmit={handleSubmit}>
+        <div>
+          <label className="text-xs font-semibold text-stone-600" htmlFor="reg-name">
+            Full name
+          </label>
           <input
-            className="field"
-            required
+            id="reg-name"
+            className="field" required
             value={form.name}
-            onChange={(event) => setForm({ ...form, name: event.target.value })}
+            onChange={(e) => setForm({ ...form, name: e.target.value })}
             placeholder="Your name"
           />
-        </label>
-        <label className="block text-sm font-semibold text-stone-700">
-          Email
+        </div>
+
+        <div>
+          <label className="text-xs font-semibold text-stone-600" htmlFor="reg-email">
+            Email address
+          </label>
           <input
-            className="field"
-            type="email"
-            required
+            id="reg-email"
+            className="field" type="email" required
             value={form.email}
-            onChange={(event) =>
-              setForm({ ...form, email: event.target.value })
-            }
+            onChange={(e) => setForm({ ...form, email: e.target.value })}
             placeholder="you@example.com"
           />
-        </label>
-        <label className="block text-sm font-semibold text-stone-700">
-          I am a
+        </div>
+
+        <div>
+          <label className="text-xs font-semibold text-stone-600" htmlFor="reg-role">
+            I am a
+          </label>
           <select
+            id="reg-role"
             className="field"
             value={form.role}
-            onChange={(event) => setForm({ ...form, role: event.target.value })}
+            onChange={(e) => setForm({ ...form, role: e.target.value })}
           >
-            {roles.map((role) => (
-              <option key={role} value={role}>
-                {role[0] + role.slice(1).toLowerCase()}
-              </option>
+            {roles.map((r) => (
+              <option key={r.value} value={r.value}>{r.label}</option>
             ))}
           </select>
-        </label>
-        <label className="block text-sm font-semibold text-stone-700">
-          Password
+        </div>
+
+        <div>
+          <label className="text-xs font-semibold text-stone-600" htmlFor="reg-password">
+            Password
+          </label>
           <input
-            className="field"
-            type="password"
-            minLength={8}
-            required
+            id="reg-password"
+            className="field" type="password" minLength={8} required
             value={form.password}
-            onChange={(event) =>
-              setForm({ ...form, password: event.target.value })
-            }
+            onChange={(e) => setForm({ ...form, password: e.target.value })}
             placeholder="At least 8 characters"
           />
-        </label>
+        </div>
+
         {error && (
-          <p className="rounded-xl bg-red-50 p-3 text-sm text-red-700">
+          <p className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
             {error}
           </p>
         )}
-        <button
-          disabled={loading}
-          className="w-full rounded-full bg-leaf-700 px-5 py-3 font-semibold text-white transition hover:bg-leaf-900 disabled:opacity-60"
-        >
+
+        <button type="submit" disabled={loading} className="btn-primary w-full">
           {loading ? "Creating account…" : "Create account"}
         </button>
       </form>
-      <p className="mt-7 text-center text-sm text-stone-600">
+
+      <p className="mt-6 text-center text-sm text-stone-500">
         Already have an account?{" "}
-        <a
-          className="font-semibold text-leaf-700 hover:text-leaf-900"
-          href="/login"
-        >
+        <a className="font-semibold text-leaf-700 hover:text-leaf-900" href="/login">
           Log in
         </a>
       </p>

@@ -11,6 +11,7 @@ from ai_service.app.api.price import router as price_router
 from ai_service.app.api.price_prediction import router as price_prediction_router
 from ai_service.app.api.pipeline import router as pipeline_router
 from ai_service.app.api.crop_planning import router as crop_planning_router
+from ai_service.app.api.allocation import router as allocation_router
 
 api_router = APIRouter()
 
@@ -22,4 +23,4 @@ api_router.include_router(price_router)
 api_router.include_router(price_prediction_router)
 api_router.include_router(pipeline_router)
 api_router.include_router(crop_planning_router)
-
+api_router.include_router(allocation_router)

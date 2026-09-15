@@ -5,55 +5,97 @@ import { useRouter } from "next/navigation";
 import { apiUrl } from "@/lib/api";
 
 type User = { name: string; role: string };
-const roleCopy: Record<
-  string,
-  { title: string; description: string; actions: string[] }
-> = {
+
+/* ── Role-specific copy ── */
+const roleCopy: Record<string, { greeting: string; description: string }> = {
   FARMER: {
-    title: "Plan your next harvest",
-    description:
-      "Find signals that help you get better value for your produce.",
-    actions: ["List harvest", "View market demand", "Find a buyer"],
+    greeting: "Good to see you",
+    description: "Manage your produce, track orders, and stay ahead of market demand.",
   },
   FPO: {
-    title: "Coordinate your collective",
-    description: "Bring member supply and buyer demand into one view.",
-    actions: ["Add member produce", "Aggregate orders", "Plan dispatch"],
+    greeting: "Good to see you",
+    description: "Coordinate your collective's supply, aggregate orders, and plan dispatch.",
   },
   BUYER: {
-    title: "Source fresh produce",
-    description: "Match your purchasing needs with reliable local supply.",
-    actions: ["Browse supply", "Create demand request", "Track deliveries"],
+    greeting: "Good to see you",
+    description: "Source fresh produce, manage procurement requests, and track deliveries.",
   },
   CONSUMER: {
-    title: "Discover food closer to home",
-    description: "Connect with fresh, traceable produce from local growers.",
-    actions: ["Explore produce", "View orders", "Save farms"],
+    greeting: "Good to see you",
+    description: "Explore fresh, traceable produce from local growers.",
   },
   ADMIN: {
-    title: "Manage KisanFlow",
-    description: "Keep the marketplace healthy and growing.",
-    actions: ["Review users", "View network health", "Manage access"],
+    greeting: "Welcome",
+    description: "Monitor the KisanFlow network, manage users, and review impact.",
   },
 };
+
+/* ── Role-specific quick actions ── */
+const roleActions: Record<string, { label: string; description: string; href: string }[]> = {
+  FARMER: [
+    { label: "My produce", description: "List and manage your harvest inventory", href: "/inventory" },
+    { label: "Orders", description: "View and update your sales orders", href: "/orders" },
+    { label: "Network impact", description: "See how KisanFlow is working for you", href: "/impact" },
+  ],
+  FPO: [
+    { label: "Member produce", description: "Add and manage collective inventory", href: "/inventory" },
+    { label: "Procurement", description: "Create bulk procurement requests", href: "/procurement/new" },
+    { label: "Orders & dispatch", description: "Track and manage all orders", href: "/orders" },
+  ],
+  BUYER: [
+    { label: "Browse supply", description: "See available produce from farmers", href: "/inventory" },
+    { label: "New procurement", description: "Create a procurement request", href: "/procurement/new" },
+    { label: "Orders & delivery", description: "Track your active orders", href: "/orders" },
+  ],
+  CONSUMER: [
+    { label: "Explore produce", description: "Browse fresh produce near you", href: "/inventory" },
+    { label: "My orders", description: "View your order history", href: "/orders" },
+    { label: "Impact metrics", description: "See KisanFlow's network impact", href: "/impact" },
+  ],
+  ADMIN: [
+    { label: "Impact metrics", description: "Network performance and savings", href: "/impact" },
+    { label: "Procurement", description: "Review procurement requests", href: "/procurement/new" },
+    { label: "All orders", description: "Monitor all orders and logistics", href: "/orders" },
+  ],
+};
+
+const roleBadge: Record<string, string> = {
+  FARMER:   "bg-leaf-50 text-leaf-700 border-leaf-200",
+  FPO:      "bg-amber-50 text-amber-700 border-amber-200",
+  BUYER:    "bg-blue-50 text-blue-700 border-blue-200",
+  CONSUMER: "bg-purple-50 text-purple-700 border-purple-200",
+  ADMIN:    "bg-rose-50 text-rose-700 border-rose-200",
+};
+
+const roleLabel: Record<string, string> = {
+  FARMER:   "Farmer",
+  FPO:      "FPO",
+  BUYER:    "Buyer",
+  CONSUMER: "Consumer",
+  ADMIN:    "Admin",
+};
+
+/* ── Market signal cards (static demo data) ── */
+const marketCards = [
+  { label: "Market demand", crop: "Tomato (Patna)", value: "34,398 kg", sub: "Expected over 7 days", accent: "text-stone-900" },
+  { label: "Price guidance", crop: "Tomato spot price", value: "₹34/kg", sub: "Patna APMC estimate", accent: "text-stone-900" },
+  { label: "Freshness priority", crop: "Current batch", value: "High", sub: "Dispatch recommended soon", accent: "text-amber-700" },
+];
+
+/* ───────────────────────────────────────────── */
 
 export default function DashboardPage() {
   const router = useRouter();
   const [user, setUser] = useState<User | null>(null);
   const [error, setError] = useState("");
+
   useEffect(() => {
     const token = localStorage.getItem("kisanflow_token");
-    if (!token) {
-      router.replace("/login");
-      return;
-    }
-    fetch(`${apiUrl}/auth/me`, {
-      headers: { Authorization: `Bearer ${token}` },
-    })
-      .then(async (response) => {
-        if (!response.ok)
-          throw new Error("Your session has ended. Please log in again.");
-        const result = await response.json();
+    if (!token) { router.replace("/login"); return; }
+    fetch(`${apiUrl}/auth/me`, { headers: { Authorization: `Bearer ${token}` } })
+      .then(async (res) => {
+        if (!res.ok) throw new Error("Your session has ended. Please log in again.");
+        const result = await res.json();
         setUser(result.data.user);
       })
       .catch((caught) => {
@@ -62,120 +104,135 @@ export default function DashboardPage() {
         setTimeout(() => router.replace("/login"), 1400);
       });
   }, [router]);
-  if (error)
+
+  /* Loading */
+  if (!user && !error) {
     return (
-      <main className="grid min-h-screen place-items-center p-6 text-center text-stone-700">
-        {error}
+      <main className="grid min-h-screen place-items-center bg-sand">
+        <div className="flex flex-col items-center gap-3 text-stone-500">
+          <div className="h-6 w-6 animate-spin rounded-full border-2 border-leaf-600 border-t-transparent" />
+          <p className="text-sm">Loading your workspace…</p>
+        </div>
       </main>
     );
-  if (!user)
+  }
+
+  /* Error */
+  if (error) {
     return (
-      <main className="grid min-h-screen place-items-center text-leaf-700">
-        Loading your workspace…
+      <main className="grid min-h-screen place-items-center bg-sand p-6 text-center">
+        <p className="text-stone-600">{error}</p>
       </main>
     );
   const content = roleCopy[user.role] || roleCopy.CONSUMER;
-
-  const roleActions: Record<string, { label: string; href: string }[]> = {
-    FARMER: [
-      { label: "What Should We Grow? (Crop Advisor)", href: "/crop-planning" },
-      { label: "Price & Profit Advisor", href: "/price-intelligence" },
-      { label: "List harvest produce", href: "/inventory" },
-      { label: "View sales & orders", href: "/orders" },
-      { label: "Network impact metrics", href: "/impact" },
-    ],
-    FPO: [
-      { label: "What Should We Grow? (Crop Planning)", href: "/crop-planning" },
-      { label: "Price Intelligence & Mandi Advisor", href: "/price-intelligence" },
-      { label: "Add member produce", href: "/inventory" },
-      { label: "Create bulk procurement", href: "/procurement/new" },
-      { label: "Orders & dispatch", href: "/orders" },
-    ],
-
-    BUYER: [
-      { label: "Browse produce supply", href: "/inventory" },
-      { label: "Create procurement request", href: "/procurement/new" },
-      { label: "Track deliveries & orders", href: "/orders" },
-    ],
-    CONSUMER: [
-      { label: "Explore fresh produce", href: "/inventory" },
-      { label: "View active orders", href: "/orders" },
-      { label: "Network impact & metrics", href: "/impact" },
-    ],
-    ADMIN: [
-      { label: "Network impact metrics", href: "/impact" },
-      { label: "Procurement requests", href: "/procurement/new" },
-      { label: "All orders & logistics", href: "/orders" },
-    ],
-  };
-
   const actions = roleActions[user.role] || roleActions.CONSUMER;
-
-  const roleBadgeColor: Record<string, string> = {
-    FARMER: "bg-emerald-100 text-emerald-800 border-emerald-300",
-    FPO: "bg-amber-100 text-amber-800 border-amber-300",
-    BUYER: "bg-blue-100 text-blue-800 border-blue-300",
-    CONSUMER: "bg-purple-100 text-purple-800 border-purple-300",
-    ADMIN: "bg-rose-100 text-rose-800 border-rose-300",
-  };
+  const firstName = user.name.split(" ")[0];
 
   return (
-    <main className="min-h-screen bg-cream">
-      <header className="border-b bg-white">
-        <div className="mx-auto flex max-w-6xl items-center justify-between px-5 py-4">
-          <a className="font-bold text-leaf-900 text-xl flex items-center gap-2" href="/">
-            🌾 KisanFlow
+    <main className="min-h-screen bg-sand">
+      {/* ── Top bar ── */}
+      <header className="border-b border-stone-200 bg-white">
+        <div className="mx-auto flex max-w-5xl items-center justify-between px-5 py-3.5 lg:px-8">
+          {/* Logo */}
+          <a href="/" className="flex items-center gap-2.5 font-bold text-stone-900">
+            <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-leaf-700 text-xs font-bold text-white">K</span>
+            KisanFlow
           </a>
-          <div className="flex items-center gap-4">
-            <span
-              className={`rounded-full border px-3 py-1 text-xs font-bold uppercase tracking-wider ${
-                roleBadgeColor[user.role] || "bg-stone-100 text-stone-700"
-              }`}
-            >
-              {user.role}
+
+          {/* Nav links */}
+          <nav className="hidden items-center gap-5 md:flex">
+            <a href="/inventory" className="text-sm font-medium text-stone-500 hover:text-stone-900 transition">Inventory</a>
+            <a href="/procurement/new" className="text-sm font-medium text-stone-500 hover:text-stone-900 transition">Procurement</a>
+            <a href="/orders" className="text-sm font-medium text-stone-500 hover:text-stone-900 transition">Orders</a>
+            <a href="/impact" className="text-sm font-medium text-stone-500 hover:text-stone-900 transition">Impact</a>
+          </nav>
+
+          {/* User / logout */}
+          <div className="flex items-center gap-3">
+            <span className={`badge border ${roleBadge[user!.role] || "bg-stone-100 text-stone-600 border-stone-200"}`}>
+              {roleLabel[user!.role] || user!.role}
             </span>
             <button
-              onClick={() => {
-                localStorage.removeItem("kisanflow_token");
-                router.push("/login");
-              }}
-              className="text-sm font-semibold text-leaf-700 hover:text-leaf-900"
+              onClick={() => { localStorage.removeItem("kisanflow_token"); router.push("/login"); }}
+              className="text-sm font-medium text-stone-500 transition hover:text-stone-800"
             >
               Log out
             </button>
           </div>
         </div>
       </header>
-      <section className="mx-auto max-w-6xl px-5 py-12">
-        <div className="flex items-center gap-3">
-          <span className="eyebrow">{user.role} Workspace</span>
-        </div>
-        <h1 className="mt-3 text-4xl font-semibold tracking-tight text-leaf-900">
-          Hello, {user.name.split(" ")[0]}.
-        </h1>
-        <p className="mt-3 max-w-xl text-lg text-stone-600">
-          {content.description}
-        </p>
 
-        <div className="mt-10 rounded-3xl bg-leaf-900 p-8 text-white shadow-lg">
-          <p className="text-leaf-100 text-sm font-medium">Your Workspace Quick Actions</p>
-          <h2 className="mt-1 text-2xl font-semibold">{content.title}</h2>
-          <div className="mt-7 grid gap-4 sm:grid-cols-3">
+      {/* ── Page content ── */}
+      <div className="mx-auto max-w-5xl px-5 py-10 lg:px-8">
+
+        {/* Greeting */}
+        <div>
+          <p className="eyebrow">{content.greeting}</p>
+          <h1 className="mt-2 text-3xl font-semibold tracking-tight text-stone-900">
+            {firstName}.
+          </h1>
+          <p className="mt-2 text-stone-500">{content.description}</p>
+        </div>
+
+        {/* ── Quick actions ── */}
+        <section className="mt-8">
+          <h2 className="text-sm font-semibold uppercase tracking-wider text-stone-400">
+            Quick actions
+          </h2>
+          <div className="mt-3 grid gap-3 sm:grid-cols-3">
             {actions.map((act) => (
               <a
-                href={act.href}
                 key={act.label}
-                className="group rounded-2xl bg-white/10 p-5 text-left font-semibold transition hover:bg-white/20 hover:scale-[1.02] flex flex-col justify-between min-h-[100px]"
+                href={act.href}
+                className="group card flex flex-col justify-between p-5 transition hover:border-leaf-200 hover:shadow-md"
               >
-                <span>{act.label}</span>
-                <span className="text-right text-leaf-200 group-hover:translate-x-1 transition-transform font-bold">
-                  →
+                <div>
+                  <p className="font-semibold text-stone-900">{act.label}</p>
+                  <p className="mt-1 text-sm text-stone-500">{act.description}</p>
+                </div>
+                <span className="mt-4 text-sm font-semibold text-leaf-700 transition group-hover:underline">
+                  Open →
                 </span>
               </a>
             ))}
           </div>
-        </div>
-      </section>
+        </section>
+
+        {/* ── Market signals (contextual, not "AI branding") ── */}
+        <section className="mt-8">
+          <div className="flex items-baseline justify-between">
+            <h2 className="text-sm font-semibold uppercase tracking-wider text-stone-400">
+              Market signals
+            </h2>
+            <span className="text-xs text-stone-400">Updated regularly</span>
+          </div>
+          <div className="mt-3 grid gap-3 sm:grid-cols-3">
+            {marketCards.map((mc) => (
+              <div key={mc.label} className="card p-5">
+                <p className="text-xs font-semibold uppercase tracking-wider text-stone-400">{mc.label}</p>
+                <p className="mt-1 text-xs text-stone-500">{mc.crop}</p>
+                <p className={`mt-2 text-2xl font-semibold tabular-nums ${mc.accent}`}>{mc.value}</p>
+                <p className="mt-1 text-xs text-stone-500">{mc.sub}</p>
+              </div>
+            ))}
+          </div>
+        </section>
+
+        {/* ── Role-specific recommendation ── */}
+        {(user!.role === "FARMER" || user!.role === "FPO") && (
+          <section className="mt-6">
+            <div className="card border-amber-200 bg-amber-50 p-5">
+              <p className="text-xs font-semibold uppercase tracking-wider text-amber-700">Recommendation</p>
+              <p className="mt-2 font-semibold text-stone-900">Consider dispatching produce soon</p>
+              <p className="mt-1 text-sm text-stone-600">
+                Current market demand is high for Tomatoes in the Patna region.
+                Listings dispatched in the next 2 days are likely to clear at ₹34/kg.
+              </p>
+            </div>
+          </section>
+        )}
+
+      </div>
     </main>
   );
 }
